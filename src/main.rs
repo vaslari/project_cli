@@ -6,6 +6,7 @@ use reqwest::Error;
 use serde_json::json;
 use console::Term;
 use crossterm::event::{self, KeyEvent, KeyCode};
+use clap::App;
 
 // 2. Estructuras y derivaciones
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,6 +17,16 @@ pub struct Config {
     pub restricted_responses: bool,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            context: String::new(),
+            max_tokens: 50,
+            model: "gpt-3.5-turbo".to_string(),
+            restricted_responses: false,
+        }
+    }
+}
 
 // 3. Implementación de funciones (No hay en este caso)
 
@@ -25,7 +36,7 @@ fn prompt_for_config() -> Config {
         context: String::new(),
         max_tokens: 50,
         restricted_responses: false,
-        model: "default".to_string(),
+        model: "gpt-3.5-turbo".to_string(),
     };
 
     println!("Por favor, ingrese la configuración deseada:");
@@ -124,22 +135,49 @@ fn read_input() -> String {
 
 
 async fn chat_gpt(query: &str, api_key: &str, config: &Config) -> Result<String, Error> {
-    let url = format!("https://api.openai.com/v1/engines/{}/completions", config.model);
-    let prompt = format!("{}{}{}", config.context, " Mi pregunta es: ", query);
     let client = reqwest::Client::new();
+    let url = "https://api.openai.com/v1/chat/completions";
     let response = client
-        .post(&url)
+        .post(url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&json!({
-            "prompt": prompt,
+            "messages": [
+                {"role": "system", "content": config.context},
+                {"role": "user", "content": query}
+            ],
             "max_tokens": config.max_tokens,
+            "model": config.model, // Agrega esta línea
         }))
         .send()
         .await?;
     let json_resp = response.json::<serde_json::Value>().await?;
     println!("Respuesta JSON completa: {:#?}", json_resp);
-    let answer = json_resp["choices"][0]["text"].as_str().unwrap_or("");
+    let answer = json_resp["choices"][0]["message"]["content"].as_str().unwrap_or("");
     Ok(answer.trim().to_string())
+}
+
+
+
+async fn configure_gpt(config: &Config) {
+    let api_key = env::var("OPENAI_API_KEY").expect("Debe configurar la variable de entorno OPENAI_API_KEY");
+
+    loop {
+        print!("Ingrese su consulta ('exit' para salir): ");
+        io::stdout().flush().unwrap();
+        let mut query = String::new();
+        io::stdin().read_line(&mut query).expect("Error al leer la entrada del usuario");
+        query = query.trim().to_string();
+        if query.eq_ignore_ascii_case("exit") {
+            break;
+        }
+
+        match chat_gpt(&query, &api_key, &config).await {
+            Ok(answer) => {
+                println!("Respuesta: {}", answer);
+            }
+            Err(error) => eprintln!("Error al comunicarse con la API de ChatGPT: {:?}", error),
+        }
+    }
 }
 
 
@@ -193,23 +231,28 @@ fn select_from_list(prompt: &str, options: &[&'static str]) -> &'static str {
 // 5. Función main
 #[tokio::main]
 async fn main() {
-    let api_key = env::var("OPENAI_API_KEY").expect("Debe configurar la variable de entorno OPENAI_API_KEY");
+    let app = App::new("CLI Project IA")
+        .version("0.1.1")
+        .author("Alfonzo")
+        .about("Interact with OpenAI's GPT")
+        .subcommand(
+            App::new("configure")
+                .about("Configure GPT settings")
+                .alias("c"),
+        );
 
-    let config = prompt_for_config();
+    let matches = app.clone().get_matches();
 
-    loop {
-        print!("Ingrese su consulta ('exit' para salir): ");
-        io::stdout().flush().unwrap();
-        let mut query = String::new();
-        io::stdin().read_line(&mut query).expect("Error al leer la entrada del usuario");
-        query = query.trim().to_string();
-        if query.eq_ignore_ascii_case("exit") {
-            break;
-        }
+    let mut config = Config {
+        context: String::new(),
+        max_tokens: 50,
+        restricted_responses: false,
+        model: "gpt-3.5-turbo".to_string(),
+    };
 
-        match chat_gpt(&query, &api_key, &config).await {
-            Ok(answer) => println!("Respuesta: {}", answer),
-            Err(error) => eprintln!("Error al comunicarse con la API de ChatGPT: {:?}", error),
-        }
+    if let Some(_) = matches.subcommand_matches("configure") {
+        config = prompt_for_config();
     }
+
+    configure_gpt(&config).await;
 }
