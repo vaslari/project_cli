@@ -39,7 +39,7 @@ fn prompt_for_config() -> Config {
         model: "gpt-3.5-turbo".to_string(),
     };
 
-    println!("Por favor, ingrese la configuración deseada:");
+    println!("\nPor favor, ingrese la configuración deseada:");
 
     println!("Here is an example of how you can give context to the queries:");
     println!("context: ");
@@ -50,6 +50,7 @@ fn prompt_for_config() -> Config {
     let max_tokens_input = read_input();
     config.max_tokens = max_tokens_input.trim().parse::<u32>().unwrap_or(50);
 
+/*
     println!("Verbosity [true/false, minimal, normal, extended] (default: normal): ");
     let verbosity_input = read_input();
     config.restricted_responses = match verbosity_input.trim().to_lowercase().as_str() {
@@ -59,13 +60,13 @@ fn prompt_for_config() -> Config {
         "extended" => false,
         _ => false,
     };
-
+*/
     println!("Model to use:");
 
     let model = select_from_list("Choose a model:", &[
+        "GPT-3.5",        
         "GPT-3",
         "GPT-4",
-        "GPT-3.5",
         "Codex",
     ]);
     
@@ -114,7 +115,7 @@ fn prompt_for_config() -> Config {
         }
         _ => {
             println!("Invalid model selected. Using default model.");
-            config.model = "text-davinci-002".to_string();
+            config.model = "text-davinci-003".to_string();
         }
     }
     
@@ -250,8 +251,11 @@ async fn main() {
         model: "gpt-3.5-turbo".to_string(),
     };
 
-    if let Some(_) = matches.subcommand_matches("configure") {
-        config = prompt_for_config();
+    match matches.subcommand() {
+        Some(("configure", _matches)) => {
+            config = prompt_for_config();
+        }
+        _ => {}
     }
 
     configure_gpt(&config).await;
