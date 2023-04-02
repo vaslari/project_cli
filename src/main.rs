@@ -192,25 +192,6 @@ fn load_config() -> Option<Config> {
     }
 }
 
-/*async fn update_config(api_key: &str) -> Result<(), Error> {
-    let mut config = load_config().unwrap_or_default();
-
-    let engine = select_model(&config.model);
-    let verbosity = config.verbosity;
-    let max_tokens = config.max_tokens;
-    let context = config.context;
-    
-    config.model = engine;
-    config.verbosity = verbosity;
-    config.max_tokens = max_tokens;
-    config.context = context;
-
-    save_config(&config);
-
-    println!("Config updated successfully.");
-    Ok(())
-}*/
-
 
 
 // 5. Independent Functions
