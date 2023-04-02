@@ -126,7 +126,7 @@ fn select_model_and_option() -> String {
     let model = select_from_list("Choose a model:", &[
         "GPT-3.5",
         "GPT-3",
-        "GPT-4",
+        //"GPT-4",
         "Codex",
     ]);
 
@@ -137,12 +137,14 @@ fn select_model_and_option() -> String {
             "text-babbage-002",
             "text-ada-002",
         ],
+/*
         "GPT-4" => &[
             "text-davinci-004",
             "text-curie-004",
             "text-babbage-004",
             "text-ada-004",
         ],
+*/
         "GPT-3.5" => &[
             "text-davinci-003",
             "text-curie-003",
