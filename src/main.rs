@@ -323,16 +323,3 @@ fn select_verbosity(prompt: &str) -> Verbosity {
         _ => Verbosity::Default,
     }
 }
-
-fn select_model(model: &str) -> String {
-    match model {
-        "text-davinci-002" | "text-curie-002" | "text-babbage-002" | "text-ada-002" |
-        "text-davinci-003" | "text-curie-003" | "text-babbage-003" | "text-ada-003" |
-        "text-davinci-004" | "text-curie-004" | "text-babbage-004" | "text-ada-004" |
-        "code-davinci-002" | "code-curie-002" | "code-babbage-002" | "code-ada-002" => model.to_string(),
-        _ => {
-            eprintln!("Invalid model selected. Using default model.");
-            "text-davinci-003".to_string()
-        }
-    }
-}
