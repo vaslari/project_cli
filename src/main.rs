@@ -225,58 +225,6 @@ fn read_input() -> String {
 fn print_config(config: &Config) {
     println!("Current configuration: {:#?}", config);
 }
-/*fn chat_gpt(config: &Config, prompt: &str, api_key: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let client = Client::new();
-    let model = &config.model;
-    let api_url = build_api_url(model);
-    
-    let url: String;
-
-    match config.model.as_str() {
-        "text-davinci-002" | "text-curie-002" | "text-babbage-002" | "text-ada-002" |
-        "text-davinci-003" | "text-curie-003" | "text-babbage-003" | "text-ada-003" |
-        "text-davinci-004" | "text-curie-004" | "text-babbage-004" | "text-ada-004" => {
-            url = format!("https://api.openai.com/v1/engines/{}/completions", config.model);
-        }
-        "code-davinci-002" | "code-curie-002" | "code-babbage-002" | "code-ada-002" => {
-            url = format!("https://api.openai.com/v1/engines/{}/completions", config.model);
-        }
-        _ => {
-            eprintln!("Invalid model selected. Using default model.");
-            url = "https://api.openai.com/v1/engines/gpt-3.5-turbo/completions".to_string();
-        }
-    }
-    
-    let response = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .json(&json!({
-            "prompt": format!("{}{}{}", config.context, "\n", prompt),
-            "max_tokens": config.max_tokens,
-            "temperature": 0.7,
-            "n": 1,
-        }))
-        .send()
-        .await?;
-    
-    let json_resp = response.json::<serde_json::Value>().await?;
-
-    match config.verbosity {
-        Verbosity::Full => {
-            println!("Full JSON response: {:#?}", json_resp);
-        }
-        Verbosity::Extended => {
-            print_config(config);
-            println!("Full JSON response: {:#?}", json_resp);
-        }
-        _ => {}
-    }
-
-    println!("Full JSON response: {:#?}", json_resp);
-    let answer = json_resp["choices"][0]["text"].as_str().unwrap_or("");
-    
-    Ok(answer.trim().to_string())
-}*/
 
 async fn chat_gpt(config: &Config, prompt: &str, api_key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let client = Client::new();
