@@ -2,5 +2,5 @@
   "context": "",
   "max_tokens": 50,
   "model": "text-davinci-003",
-  "verbosity": "Extended"
+  "verbosity": "Default"
 }
