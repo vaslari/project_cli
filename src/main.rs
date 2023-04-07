@@ -207,7 +207,8 @@ fn print_config(config: &Config) {
     println!("Current configuration: {:#?}", config);
 }
 
-async fn chat_gpt(config: &Config, prompt: &str, api_key: &str) -> Result<String, Box<dyn std::error::Error>> {
+
+async fn chat_gpt(config: &Config, prompt: &str, api_key: &str, conversation_history: &str) -> Result<String, Box<dyn std::error::Error>> {
     let client = Client::new();
     let model = &config.model;
     let api_url = build_api_url(model);
@@ -216,7 +217,7 @@ async fn chat_gpt(config: &Config, prompt: &str, api_key: &str) -> Result<String
         .post(&api_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&json!({
-            "prompt": format!("{}{}{}", config.context, "\n", prompt),
+            "prompt": format!("{}{}{}{}{}", conversation_history, config.context, "\n", prompt, "\n"),
             "max_tokens": config.max_tokens,
             "temperature": 0.7,
             "n": 1,
@@ -246,6 +247,8 @@ async fn chat_gpt(config: &Config, prompt: &str, api_key: &str) -> Result<String
 async fn configure_gpt(config: &Config) {
     let api_key = env::var("OPENAI_API_KEY").expect("You must set the OPENAI_API_KEY environment variable");
 
+    let mut conversation_history = String::new();
+
     loop {
         print!("Enter your query ('exit' to quit): ");
         io::stdout().flush().unwrap();
@@ -256,9 +259,11 @@ async fn configure_gpt(config: &Config) {
             break;
         }
 
-        match chat_gpt(&config, &query, &api_key).await {
+        match chat_gpt(&config, &query, &api_key, &conversation_history).await {
             Ok(answer) => {
                 println!("Answer: {}", answer);
+                conversation_history.push_str(&format!("User: {}\n", query));
+                conversation_history.push_str(&format!("Assistant: {}\n", answer));
             }
             Err(error) => eprintln!("Failed to communicate with the ChatGPT API: {:?}", error),
         }
